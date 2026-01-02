@@ -33,11 +33,11 @@ async def fixed_schedule_policy_timer_example():
         1_000_000_000,
         callback,
     )
-    await timer.start()
+    timer.start()
     # Let the timer run for 10.5 seconds
     # The timer callback should trigger 11 times
     await asyncio.sleep(10.5)
-    await timer.stop()
+    timer.stop()
 
 
 # The Fixed Delay Timer Example
@@ -60,11 +60,11 @@ async def fixed_delay_timer_example():
         print(f"Timer tick {tickNumber}, endTime={datetime.now()}")
 
     timer: Timer = Timer(1_000_000_000, callback, schedule_policy="FIXED_DELAY")
-    await timer.start()
+    timer.start()
     # Let the timer run for 10 seconds
     # The timer callback should trigger 7 times
     await asyncio.sleep(10)
-    await timer.stop()
+    timer.stop()
 
 
 async def demo_schedule_policies():

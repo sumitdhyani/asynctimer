@@ -27,11 +27,11 @@ async def basic_timer_example():
         1_000_000_000,
         callback,
     )
-    await timer.start()
+    timer.start()
     # Let the timer run for 10.5 seconds
     # The timer callback should trigger 11 times
     await asyncio.sleep(10.5)
-    await timer.stop()
+    timer.stop()
 
 
 asyncio.run(basic_timer_example())
