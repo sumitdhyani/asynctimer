@@ -4,7 +4,7 @@ Deterministic, **asyncio-native** timer for predictable, repeated execution
 
 ## Overview
 
-This library provides **Timer** with explicit drift and overrun semantics.
+asynctimer is a precise, cancellation-safe asyncio timer for Python that avoids drift and enforces fixed scheduling semantics.
 It is intentionally conservative and explicit, making it suitable for protecting external systems (APIs, databases, hardware) where **bursts and ambiguity are unacceptable**.
 
 ## Why this library exists
@@ -20,6 +20,22 @@ Many timer utilities:
 > Behavior is explicit, testable, and deterministic — even if that costs some throughput, though in case of timers that's virtually never a concern.
 
 ---
+
+## Why not just use `asyncio.sleep()`?
+
+A common way to implement a repeating task is:
+
+```python
+while True:
+    await asyncio.sleep(interval)
+    do_work()
+```
+
+This approach introduces timer drift because:
+- execution time is added to the interval
+- event loop scheduling latency compounds over time
+- For long-running tasks, this drift becomes observable and problematic.
+- No cancellation mechanism
 
 ## Installation
 
@@ -51,7 +67,7 @@ Implements a repeating, async-friendly timer that calls a user-provided callback
         - Takes no arguments
         - Returns nothing
     - **schedule_policy**: Drift policy
-        - `"FIXED_SCHEDULE"`
+        - `"FIXED_SCHEDULE"` (default)
         - `"FIXED_DELAY"`
     - `start()` — start the timer loop (non-blocking; schedules repeated executions).
     - `stop()` — stop the timer loop.
