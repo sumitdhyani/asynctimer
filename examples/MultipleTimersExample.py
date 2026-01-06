@@ -4,7 +4,7 @@ import sys
 from datetime import datetime
 
 sys.path.insert(
-    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src/asyncio_utils"))
+    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src/asynctimer"))
 )
 
 # Multiple Timers Example
@@ -43,14 +43,14 @@ async def multi_timer_example():
     ]
 
     for timer in timers:
-        await timer.start()
+        timer.start()
 
     # Let the timers run for 12.5 seconds
     # Timer_1 should trigger 13 times, Timer_2, 7 times and Timer_3, 5 times
     await asyncio.sleep(12.5)
 
     for timer in timers:
-        await timer.stop()
+        timer.stop()
 
 
 asyncio.run(multi_timer_example())

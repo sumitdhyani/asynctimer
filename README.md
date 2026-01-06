@@ -1,10 +1,10 @@
 # asynctimer
 
-Deterministic, asyncio-native utility for **repeated, fixed-interval execution** , designed for **predictable behavior and correctness**.
+Deterministic, **asyncio-native** timer for predictable, repeated execution
 
 ## Overview
 
-This library provides **Timer** with explicit drift and overrun semantics
+asynctimer is a precise, cancellation-safe asyncio timer for Python that avoids drift and enforces fixed scheduling semantics.
 It is intentionally conservative and explicit, making it suitable for protecting external systems (APIs, databases, hardware) where **bursts and ambiguity are unacceptable**.
 
 ## Why this library exists
@@ -20,6 +20,22 @@ Many timer utilities:
 > Behavior is explicit, testable, and deterministic — even if that costs some throughput, though in case of timers that's virtually never a concern.
 
 ---
+
+## Why not just use `asyncio.sleep()`?
+
+A common way to implement a repeating task is:
+
+```python
+while True:
+    await asyncio.sleep(interval)
+    do_work()
+```
+
+This approach introduces timer drift because:
+- execution time is added to the interval
+- event loop scheduling latency compounds over time
+- For long-running tasks, this drift becomes observable and problematic.
+- No cancellation mechanism
 
 ## Installation
 
@@ -37,16 +53,24 @@ Implements a repeating, async-friendly timer that calls a user-provided callback
 ### Timer Guarantees
 
 - Callbacks never execute concurrently
-- Stop semantics are deterministic, i.e once the timer is stopped, the callbacks will not be executher any further
+- Calling stop() guarantees that no further callbacks will be scheduled or started after it returns.
 - Drift behavior is explicitly configurable
 - Overrun behavior is well-defined and tested
 
 
 ### API
 
-- `Timer(timeout: datetime.timedelta | float, callback: Callable, schedule_policy: SchedulePolicy = SchedulePolicy.FIXED)` — create a timer with a repeat interval, callback, and drift policy.
-- `start()` — start the timer loop (non-blocking; schedules repeated executions).
-- `stop()` — stop the timer loop.
+- `Timer(timeout: int | float, callback: Callback, schedule_policy: str = "FIXED_SCHEDULE")` — create a timer with a repeat interval, callback, and drift policy.
+    - **timeout_ns**: Tick interval in nanoseconds
+    - **callback**: `Callable[[], None | Awaitable[None]]`
+        - May be a synchronous function or an async coroutine
+        - Takes no arguments
+        - Returns nothing
+    - **schedule_policy**: Drift policy
+        - `"FIXED_SCHEDULE"` (default)
+        - `"FIXED_DELAY"`
+    - `start()` — start the timer loop (non-blocking; schedules repeated executions).
+    - `stop()` — stop the timer loop.
 
 ### Drift / Schedule Policy
 
@@ -66,16 +90,15 @@ next_tick = initial_start + N × interval
   - clock-aligned tasks
 
 ```python
-from asyncio_utils import Timer, SchedulePolicy
-from datetime import timedelta
+from asynctimer import Timer
 # callback can be async too
 def callback():
     print('tick')
 
 timer = Timer(
-    timedelta(seconds=2),
+    2000_000_000,
     callback,
-    schedule_policy=SchedulePolicy.FIXED
+    schedule_policy="FIXED_SCHEDULE"
 )
 timer.start()  # starts the repeating timer
 # ... later: timer.stop()
@@ -95,13 +118,12 @@ next_tick = callback_completion + interval
   - background maintenance
 
 ```python
-from asyncio_utils import Timer, SchedulePolicy
-from datetime import timedelta
+from asynctimer import Timer
 
 timer = Timer(
-    timedelta(seconds=2),
+    2000_000_000,
     callback,
-    schedule_policy=SchedulePolicy.DELAY
+    schedule_policy="FIXED_DELAY"
 )
 timer.start()
 ```
@@ -117,21 +139,20 @@ This avoids burst execution and keeps behavior predictable.
 ### Stop Semantics
 
 Calling `stop()` guarantees:
-- No further callbacks will be executed
+- No further callbacks will be scheduled or started after it returns.
 
 ### Example
 
 ```python
 import asyncio
-from datetime import timedelta
-from asyncio_utils import Timer, SchedulePolicy
+from asynctimer import Timer
 
 # callback can be async too
 def callback():
     print('tick')
 
 async def main():
-    timer = Timer(timedelta(seconds=2), my_async_callback)
+    timer = Timer(2000_000_000, callback)
     timer.start()  # starts the repeating timer
     await asyncio.sleep(10)
     timer.stop()

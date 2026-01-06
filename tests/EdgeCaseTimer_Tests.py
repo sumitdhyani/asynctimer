@@ -5,7 +5,7 @@ import unittest
 from datetime import datetime
 
 sys.path.insert(
-    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src/asyncio_utils"))
+    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src/asynctimer"))
 )
 from Timer import Timer
 
